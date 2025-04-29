@@ -69,6 +69,55 @@
   </style>
 </head>
 
+<script>
+  function showTab(tabId) {
+    document.getElementById('webcam-tab').classList.add('hidden');
+    document.getElementById('canvas-tab').classList.add('hidden');
+    document.getElementById(tabId).classList.remove('hidden');
+  }
+
+  // Drawing logic
+  const canvas = document.getElementById("draw-canvas");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+
+  canvas.addEventListener("mousedown", () => drawing = true);
+  canvas.addEventListener("mouseup", () => drawing = false);
+  canvas.addEventListener("mouseout", () => drawing = false);
+  canvas.addEventListener("mousemove", draw);
+
+  function draw(e) {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  }
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function submitCanvas() {
+    const dataURL = canvas.toDataURL("image/png");
+    fetch("/submit_canvas", {
+      method: "POST",
+      body: JSON.stringify({ image: dataURL }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById("gemini-output").innerText = data;
+    });
+  }
+</script>
+
 <body>
   <nav class="navbar p-4">
     <div class="container mx-auto flex items-center justify-between">
@@ -106,21 +155,50 @@
     </div>
   </section>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mx-auto p-8">
-    <div class="card p-4">
-      <img src="{{ url_for('video_feed') }}" width="1280" height="720" class="w-full h-auto">
+  <!-- Tabs -->
+<div class="flex justify-center space-x-4 mt-8">
+  <button onclick="showTab('webcam-tab')" class="btn-purple p-2 rounded">Webcam & Upload</button>
+  <button onclick="showTab('canvas-tab')" class="btn-purple p-2 rounded">Draw with Mouse</button>
+</div>
+
+<!-- Webcam + Upload Section -->
+<div id="webcam-tab" class="grid grid-cols-1 md:grid-cols-2 gap-8 mx-auto p-8">
+  <div class="card p-4">
+    <img src="{{ url_for('video_feed') }}" width="1280" height="720" class="w-full h-auto">
+  </div>
+  <div class="card p-4">
+    <div class="flex justify-between items-center mb-4 mt-4">
+      <h2 class="text-2xl font-bold">
+        <i class="fas fa-calculator"></i> Solution
+      </h2>
+      <button onclick="fetchGeminiOutput()" class="btn-purple p-2 rounded">
+        <i class="fas fa-magic"></i> Magic Wand
+      </button>
     </div>
-    <div class="card p-4">
-      <div class="flex justify-between items-center mb-4 mt-4">
-        <h2 class="text-2xl font-bold">
-          <i class="fas fa-calculator"></i> Solution
-        </h2>
-        <button onclick="fetchGeminiOutput()" class="btn-purple p-2 rounded"><i class="fas fa-magic"></i> Magic Wand
-        </button>
-      </div>
-      <p id="gemini-output" class="mt-4"></p>
+    <p id="gemini-output" class="mt-4"></p>
+
+    <!-- Upload Image -->
+    <div class="mt-6 border-t pt-4">
+      <h3 class="text-xl font-semibold mb-2"><i class="fas fa-upload"></i> Upload an Image</h3>
+      <form action="/upload_image" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <input type="file" name="image" accept="image/*" required class="block w-full text-gray-900 rounded border border-gray-300">
+        <button type="submit" class="btn-purple p-2 rounded"><i class="fas fa-paper-plane"></i> Upload & Solve</button>
+      </form>
     </div>
   </div>
+</div>
+
+<!-- Canvas Drawing Tab -->
+<div id="canvas-tab" class="hidden p-8">
+  <div class="card p-6">
+    <h2 class="text-2xl font-bold mb-4"><i class="fas fa-pencil-alt"></i> Draw Your Equation</h2>
+    <canvas id="draw-canvas" width="500" height="300" class="border border-white mb-4"></canvas>
+    <div class="space-x-2">
+      <button onclick="clearCanvas()" class="btn-purple p-2 rounded">Clear</button>
+      <button onclick="submitCanvas()" class="btn-purple p-2 rounded">Submit & Solve</button>
+    </div>
+  </div>
+</div>
 
   <div class="tech-section p-8">
     <div class="container mx-auto text-center">

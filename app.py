@@ -5,6 +5,9 @@ import os
 import handTrack as ht
 import google.generativeai as genai
 from dotenv import load_dotenv
+import base64
+from PIL import Image
+from io import BytesIO
 
 load_dotenv()
 app = Flask(__name__)
@@ -131,6 +134,24 @@ def gemini():
 def index():
     return render_template("index.html")
 
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    file = request.files['image']
+    file.save("saved_canvas.jpg")
+    return redirect(url_for("gemini_result"))
+
+@app.route("/submit_canvas", methods=["POST"])
+def submit_canvas():
+    data = request.get_json()
+    img_data = data["image"].split(",")[1]
+    img_bytes = base64.b64decode(img_data)
+    img = Image.open(BytesIO(img_bytes))
+    img.save("saved_canvas.jpg")
+    return gemini()
+
+@app.route("/gemini_result")
+def gemini_result():
+    return gemini()
 
 if __name__ == "__main__":
     app.run(debug=True)
