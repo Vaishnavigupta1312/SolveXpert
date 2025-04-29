@@ -1,4 +1,4 @@
-# Apple Calculator Using Computer Vision - MathCam 📸
+# Apple Calculator Using Computer Vision - SolveXpert 📸
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/03f7c640-820c-427c-98c8-d61728733853" height="375">

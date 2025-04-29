@@ -121,7 +121,7 @@ def gemini():
     response = model.generate_content(
         [
             sample_file,
-            "In the picture you have been provided a matrix question/equation. Please solve it and give numerical answer. First write the final solution then write the explanation. Give plain text response only.",
+            "Please analyse the image you have been given and solve it. First write the final solution then write the explanation in maximum 200 words. Give plain text response only.",
         ]
     )
     return response.text
